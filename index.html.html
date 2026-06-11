@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>일학습병행 현장심사표 자동화</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f6fa;
+    --white: #ffffff;
+    --primary: #1a4fa0;
+    --primary-light: #2d6fd4;
+    --primary-bg: #e8f0fc;
+    --accent: #e84c30;
+    --accent-bg: #fef0ed;
+    --green: #1a9e60;
+    --green-bg: #e6f7ef;
+    --gray-100: #f0f1f5;
+    --gray-200: #e2e4ec;
+    --gray-400: #9ba3b8;
+    --gray-600: #5a6478;
+    --gray-800: #2c3347;
+    --border: #d8dce8;
+    --shadow: 0 2px 8px rgba(26,79,160,0.08);
+    --shadow-lg: 0 4px 20px rgba(26,79,160,0.12);
+    --font: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--gray-800);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* 상단 헤더 */
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(26,79,160,0.3);
+  }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-badge {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    padding: 8px 18px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-white {
+    background: white;
+    color: var(--primary);
+  }
+  .btn-white:hover { background: #f0f5ff; }
+  .btn-outline {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .btn-print {
+    background: var(--primary-light);
+    color: white;
+  }
+  .btn-print:hover { background: #1e5db8; }
+
+  /* 레이아웃 */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  /* 기업 정보 카드 */
+  .info-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 22px 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .info-card h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .info-card h2::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .info-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  .info-field input, .info-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--gray-800);
+    background: var(--gray-100);
+    transition: all 0.15s;
+    outline: none;
+  }
+  .info-field input:focus, .info-field select:focus {
+    border-color: var(--primary-light);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(45,111,212,0.12);
+  }
+
+  /* 특수 체크박스 */
+  .checkboxes {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .check-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    user-select: none;
+  }
+  .check-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  /* 점수 요약 카드 */
+  .score-summary {
+    background: var(--primary);
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: var(--shadow-lg);
+  }
+  .score-main {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .score-number {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  .score-max {
+    font-size: 20px;
+    font-weight: 400;
+    opacity: 0.65;
+  }
+  .score-label {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  .score-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .result-badge {
+    padding: 8px 22px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .result-pass { background: var(--green); }
+  .result-fail { background: var(--accent); }
+  .result-excluded { background: #666; }
+  .score-breakdown {
+    display: flex;
+    gap: 20px;
+  }
+  .breakdown-item {
+    text-align: center;
+  }
+  .breakdown-item .val {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .breakdown-item .lbl {
+    font-size: 11px;
+    opacity: 0.65;
+    margin-top: 3px;
+  }
+  .divider-v {
+    width: 1px;
+    height: 40px;
+    background: rgba(255,255,255,0.2);
+    align-self: center;
+  }
+
+  /* 섹션 카드 */
+  .section-card {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+  }
+  .section-header:hover { background: var(--gray-100); }
+  .section-header.open { border-bottom-color: var(--border); }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    background: var(--primary);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gray-800);
+  }
+  .section-score-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chip {
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .chip-score {
+    background: var(--primary-bg);
+    color: var(--primary);
+  }
+  .chip-max {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-weight: 500;
+  }
+  .chevron {
+    color: var(--gray-400);
+    font-size: 18px;
+    transition: transform 0.2s;
+  }
+  .chevron.open { transform: rotate(180deg); }
+
+  .section-body {
+    display: none;
+    padding: 20px 24px;
+  }
+  .section-body.open { display: block; }
+
+  /* 심사 항목 */
+  .eval-item {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+  .eval-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+  .eval-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .eval-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-800);
+    flex: 1;
+  }
+  .eval-score-display {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+  .eval-score-display .unit { font-size: 12px; font-weight: 500; color: var(--gray-400); }
+
+  /* 버튼 그룹 */
+  .btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .btn-score {
+    padding: 7px 16px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--gray-600);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 70px;
+  }
+  .btn-score .label { font-size: 11px; color: var(--gray-400); }
+  .btn-score:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .btn-score.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  .btn-score.active .label { color: rgba(255,255,255,0.7); }
+  .btn-score.excluded {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  /* 안내 텍스트 */
+  .hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--gray-400);
+    background: var(--gray-100);
+    border-radius: 6px;
+    padding: 7px 11px;
+    line-height: 1.5;
+  }
+
+  /* 감점/가점 섹션 */
+  .bonus-section {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .bonus-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .bonus-header:hover { background: var(--gray-100); }
+  .bonus-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .bonus-badge {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .badge-bonus { background: var(--green-bg); color: var(--green); }
+  .badge-penalty { background: var(--accent-bg); color: var(--accent); }
+  .bonus-body {
+    display: none;
+    padding: 0 24px 20px;
+  }
+  .bonus-body.open { display: block; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-info { flex: 1; margin-right: 16px; }
+  .toggle-info .tname { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+  .toggle-info .tdesc { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+  .toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .toggle-pts {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 55px;
+    text-align: right;
+  }
+  .toggle-pts.bonus { color: var(--green); }
+  .toggle-pts.penalty { color: var(--accent); }
+
+  /* 토글 스위치 */
+  .switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--gray-200);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  input:checked + .slider { background: var(--green); }
+  input:checked + .slider.penalty-slider { background: var(--accent); }
+  input:checked + .slider::before { transform: translateX(20px); }
+
+  /* 우량기업 배너 */
+  .special-banner {
+    background: linear-gradient(135deg, #1a4fa0, #2d6fd4);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .special-icon { font-size: 24px; }
+  .special-info .stitle { font-size: 14px; font-weight: 700; }
+  .special-info .sdesc { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+
+  /* 출력 버튼 */
+  .print-area {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .btn-lg {
+    padding: 13px 32px;
+    font-size: 14px;
+    border-radius: 9px;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-weight: 700;
+    transition: all 0.15s;
+    box-shadow: 0 3px 10px rgba(26,79,160,0.3);
+  }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    cursor: pointer;
+    font-family: var(--font);
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--primary-bg); }
+  .btn-danger {
+    background: white;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    cursor: pointer;
+    font-family: var(--font);
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: var(--accent-bg); }
+
+  /* 확인 모달 */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 28px 22px;
+    width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    text-align: center;
+  }
+  .modal-icon { font-size: 32px; margin-bottom: 10px; }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+  .modal-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 22px; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; border: none; transition: all 0.15s; }
+  .modal-cancel { background: var(--gray-100); color: var(--gray-600); }
+  .modal-cancel:hover { background: var(--gray-200); }
+  .modal-confirm { background: var(--accent); color: white; }
+  .modal-confirm:hover { background: #d43d26; }
+
+  @media print {
+    body { background: white; }
+    .header-actions, .print-area { display: none; }
+    .container { padding: 10px; }
+    .section-body { display: block !important; }
+    .bonus-body { display: block !important; }
+    .chevron { display: none; }
+    .btn-score:not(.active) { opacity: 0.3; }
+    .btn-score.active { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+
+  .section-header.all-selected .section-num {
+    background: var(--green);
+  }
+</style>
+</head>
+<body>
+
+<!-- 초기화 확인 모달 -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">초기화하시겠습니까?</div>
+    <div class="modal-desc">입력한 모든 점수와 기업 정보가<br>삭제됩니다.</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeResetModal()">취소</button>
+      <button class="modal-confirm" onclick="doReset()">초기화</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">
+    <div class="header-badge">2026</div>
+    <h1>일학습병행 참여신청 기업 현장심사표</h1>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="resetAll()">초기화</button>
+    <button class="btn btn-white" onclick="printPage()">🖨️ 출력</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 기업 정보 -->
+  <div class="info-card">
+    <h2>기업 정보</h2>
+    <div class="info-grid">
+      <div class="info-field" style="grid-column: span 2">
+        <label>기업명</label>
+        <input type="text" id="company-name" placeholder="기업명을 입력하세요">
+      </div>
+      <div class="info-field">
+        <label>심사일자</label>
+        <input type="date" id="eval-date">
+      </div>
+      <div class="info-field" style="grid-column: span 2">
+        <label>훈련분야 (훈련자격명)</label>
+        <input type="text" id="train-field" placeholder="예) SW개발_L3">
+      </div>
+      <div class="info-field">
+        <label>신청 유형</label>
+        <select id="apply-type">
+          <option value="">선택</option>
+          <option>단독기업형</option>
+          <option>공동훈련센터형</option>
+          <option>산업계주도형</option>
+        </select>
+      </div>
+      <div class="info-field">
+        <label>공동훈련센터명</label>
+        <input type="text" id="center-name" placeholder="해당 시 입력">
+      </div>
+      <div class="info-field">
+        <label>관할 공단 지부·지사명</label>
+        <input type="text" id="branch-name" placeholder="예) 서울지역본부">
+      </div>
+      <div class="info-field" style="grid-column: span 3">
+        <label>특수 구분</label>
+        <div class="checkboxes">
+          <label class="check-label">
+            <input type="checkbox" id="chk-excellent" onchange="applyExcellent()"> 우량기업
+          </label>
+          <label class="check-label">
+            <input type="checkbox" id="chk-ai" onchange="updateAll()"> AI·첨단·디지털 분야 과정
+          </label>
+          <label class="check-label">
+            <input type="checkbox" id="chk-gov" onchange="updateAll()"> 정부부처 인증 해당
+          </label>
+          <label class="check-label">
+            <input type="checkbox" id="chk-revoked" onchange="updateAll()"> 최근 1년 이내 지정취소
+          </label>
+          <label class="check-label">
+            <input type="checkbox" id="chk-returned" onchange="updateAll()"> 최근 1년 이내 자진반납
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 점수 요약 -->
+  <div class="score-summary">
+    <div>
+      <div class="score-label">총 득점</div>
+      <div class="score-main">
+        <span class="score-number" id="total-score">0</span>
+        <span class="score-max">/ 100점</span>
+      </div>
+      <div class="score-label" id="score-note">70점 이상 시 적합 판정</div>
+    </div>
+    <div class="score-breakdown">
+      <div class="breakdown-item">
+        <div class="val" id="sec1-score">0</div>
+        <div class="lbl">Ⅰ. 인력양성 (40)</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="breakdown-item">
+        <div class="val" id="sec2-score">0</div>
+        <div class="lbl">Ⅱ. 기업여건 (30)</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="breakdown-item">
+        <div class="val" id="sec3-score">0</div>
+        <div class="lbl">Ⅲ. 훈련준비 (30)</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="breakdown-item">
+        <div class="val" id="bonus-display" style="color:#86efac">+0</div>
+        <div class="lbl">가점/감점</div>
+      </div>
+    </div>
+    <div class="score-result">
+      <div class="result-badge result-pass" id="result-badge">미입력</div>
+      <div style="font-size:11px; opacity:0.65; text-align:center" id="result-note">항목을 입력해주세요</div>
+    </div>
+  </div>
+
+  <!-- Ⅰ. 인력 양성에 대한 의지 -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title">
+        <div class="section-num">Ⅰ</div>
+        <div class="section-name">인력 양성에 대한 의지</div>
+      </div>
+      <div class="section-score-chip">
+        <span class="chip chip-score" id="sec1-chip">0점</span>
+        <span class="chip chip-max">/ 40점</span>
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="section-body open">
+
+      <!-- 1-① 기업전담인력 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">① 기업전담인력 선발·관리</div>
+          <div class="eval-score-display"><span id="s1_1_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s1_1', 10, this)" data-max="10">
+            <span>매우우수</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_1', 7, this)" data-max="10">
+            <span>우수</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_1', 3, this)" data-max="10">
+            <span>보통</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_1', 0, this)" data-max="10">
+            <span>미흡</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">CEO 인터뷰, 사업수행계획서 등 — 사내우수인력 투입 가능성, 전담자 인센티브 계획 등 확인</div>
+      </div>
+
+      <!-- 1-② 학습근로자 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">② 학습근로자 선발·관리</div>
+          <div class="eval-score-display"><span id="s1_2_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s1_2', 10, this)" data-max="10">
+            <span>매우우수</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_2', 7, this)" data-max="10">
+            <span>우수</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_2', 3, this)" data-max="10">
+            <span>보통</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_2', 0, this)" data-max="10">
+            <span>미흡</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">임금수준·대우, 훈련 부담 관리 방안, 훈련 완료 후 활용 계획, 안전교육 실시 여부 등 확인</div>
+      </div>
+
+      <!-- 1-③ 중장기 HRD -->
+      <div class="eval-item" id="item-hrd">
+        <div class="eval-header">
+          <div class="eval-title">③ 중장기 HRD 계획·방안</div>
+          <div class="eval-score-display"><span id="s1_3_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s1_3', 5, this)" data-max="5">
+            <span>매우우수</span><span class="label">5점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_3', 3, this)" data-max="5">
+            <span>우수</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_3', 1, this)" data-max="5">
+            <span>보통</span><span class="label">1점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_3', 0, this)" data-max="5">
+            <span>미흡</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">기업 자체 HRD 계획 보유 여부, 일학습병행 포함 계획, 숙련근로자 유지 노력 등 확인</div>
+      </div>
+
+      <!-- 1-④ 훈련과정 개발 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">④ 훈련과정 개발·운영역량</div>
+          <div class="eval-score-display"><span id="s1_4_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s1_4', 10, this)" data-max="10">
+            <span>매우우수</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_4', 7, this)" data-max="10">
+            <span>우수</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_4', 3, this)" data-max="10">
+            <span>보통</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_4', 0, this)" data-max="10">
+            <span>미흡</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">일학습병행 훈련과정 개발·실시·평가 이해도, 기업 기술력 고려한 현실적 계획 여부 확인</div>
+      </div>
+
+      <!-- 2. 유사훈련 -->
+      <div class="eval-item" id="item-similar">
+        <div class="eval-header">
+          <div class="eval-title">2. 유사훈련 실시경험</div>
+          <div class="eval-score-display"><span id="s1_5_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s1_5', 5, this)" data-max="5">
+            <span>3회 이상</span><span class="label">5점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_5', 3, this)" data-max="5">
+            <span>2회</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_5', 1, this)" data-max="5">
+            <span>1회</span><span class="label">1점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s1_5', 0, this)" data-max="5">
+            <span>0회</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">사업주훈련, 국가인적자원개발컨소시엄, 체계적 현장훈련, 일학습병행 타유형 등 — 공단 DB 또는 기업 제출 자료로 확인</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Ⅱ. 기업 여건의 적절성 -->
+  <div class="section-card">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-title">
+        <div class="section-num">Ⅱ</div>
+        <div class="section-name">기업 여건의 적절성</div>
+      </div>
+      <div class="section-score-chip">
+        <span class="chip chip-score" id="sec2-chip">0점</span>
+        <span class="chip chip-max">/ 30점</span>
+        <span class="chevron open">▼</span>
+      </div>
+    </div>
+    <div class="section-body open">
+
+      <!-- 신용등급 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">① 신용등급</div>
+          <div class="eval-score-display"><span id="s2_1_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s2_1', 5, this)" data-max="5">
+            <span>A 등급군</span><span class="label">5점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_1', 4, this)" data-max="5">
+            <span>B 등급군</span><span class="label">4점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_1', 3, this)" data-max="5">
+            <span>C 등급군</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score excluded" onclick="setExcluded('s2_1', this)" data-max="5">
+            <span>D 등급</span><span class="label">지정제외</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_1', 0, this)" data-max="5">
+            <span>등급 없음</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">공단 전산 신용등급 조회 — 공공기관·금융기관은 최상위등급(5점) 자동 부여</div>
+      </div>
+
+      <!-- 상시근로자 수 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">② 상시근로자 수</div>
+          <div class="eval-score-display"><span id="s2_2_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s2_2', 15, this)" data-max="15">
+            <span>100명 이상</span><span class="label">15점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_2', 12, this)" data-max="15">
+            <span>50~99명</span><span class="label">12점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_2', 9, this)" data-max="15">
+            <span>20~49명</span><span class="label">9점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_2', 6, this)" data-max="15">
+            <span>5~19명</span><span class="label">6점</span>
+          </button>
+        </div>
+        <div class="hint">HRD-Net 상시근로자 수 확인 또는 EI 사업장별 취득자 목록조회 (3개월 유지 인원)</div>
+      </div>
+
+      <!-- 장기근속 -->
+      <div class="eval-item" id="item-tenure">
+        <div class="eval-header">
+          <div class="eval-title">2. 장기근속 현황</div>
+          <div class="eval-score-display"><span id="s2_3_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s2_3', 10, this)" data-max="10">
+            <span>70% 이상</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_3', 7, this)" data-max="10">
+            <span>50~69%</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_3', 5, this)" data-max="10">
+            <span>40~49%</span><span class="label">5점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_3', 3, this)" data-max="10">
+            <span>30~39%</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s2_3', 0, this)" data-max="10">
+            <span>30% 미만</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">EI 사업장별 취득자 목록조회 — 고용보험 취득일~참여신청일 3년 이상(설립5년미만 기업: 운영기간 50% 이상) 근무자 비율</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Ⅲ. 훈련 준비 상황 -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title">
+        <div class="section-num">Ⅲ</div>
+        <div class="section-name">훈련 준비 상황</div>
+      </div>
+      <div class="section-score-chip">
+        <span class="chip chip-score" id="sec3-chip">0점</span>
+        <span class="chip chip-max">/ 30점</span>
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="section-body open">
+
+      <!-- 인적 인프라 -->
+      <div class="eval-item" id="item-human">
+        <div class="eval-header">
+          <div class="eval-title">1. 인적 인프라 현황 (기업현장교사 후보군)</div>
+          <div class="eval-score-display"><span id="s3_1_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s3_1', 10, this)" data-max="10">
+            <span>6명 이상</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_1', 7, this)" data-max="10">
+            <span>5명</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_1', 5, this)" data-max="10">
+            <span>4명</span><span class="label">5점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_1', 3, this)" data-max="10">
+            <span>3명</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_1', 0, this)" data-max="10">
+            <span>2명 이하</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">기업현장교사 자격기준 충족 증빙 제출 시 배점 — 졸업증명서, 경력증명서, 해당 자격증 등</div>
+      </div>
+
+      <!-- 물적 인프라 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">2. 물적 인프라 현황 (훈련 시설·장비)</div>
+          <div class="eval-score-display"><span id="s3_2_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s3_2', 10, this)" data-max="10">
+            <span>매우우수</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_2', 7, this)" data-max="10">
+            <span>우수</span><span class="label">7점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_2', 3, this)" data-max="10">
+            <span>보통</span><span class="label">3점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_2', 0, this)" data-max="10">
+            <span>미흡</span><span class="label">0점</span>
+          </button>
+        </div>
+        <div class="hint">현장심사 시 확인 — 보유 훈련장비 현황, 위치 및 안전 확보 여부 등 비계량 평가</div>
+      </div>
+
+      <!-- 안전보건 -->
+      <div class="eval-item">
+        <div class="eval-header">
+          <div class="eval-title">3. 안전·보건관리 적정성</div>
+          <div class="eval-score-display"><span id="s3_3_score">0</span><span class="unit">점</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-score" onclick="setScore('s3_3', 10, this)" data-max="10">
+            <span>매우우수</span><span class="label">10점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_3', 8, this)" data-max="10">
+            <span>우수</span><span class="label">8점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_3', 6, this)" data-max="10">
+            <span>보통</span><span class="label">6점</span>
+          </button>
+          <button class="btn-score" onclick="setScore('s3_3', 4, this)" data-max="10">
+            <span>미흡</span><span class="label">4점</span>
+          </button>
+        </div>
+        <div class="hint">ISO45001 인증 → 매우우수 | 위험성평가 담당자·주기적 실시·피드백·최근6개월 안전교육 → 매우우수 | 위험성평가 실시 중이나 피드백 미흡·1년내 교육 → 우수</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 가점/감점 -->
+  <div class="bonus-section">
+    <div class="bonus-header" onclick="toggleBonus(this)">
+      <div class="bonus-title">
+        <span>가점 · 감점</span>
+        <span class="bonus-badge badge-bonus" id="bonus-chip">+0점</span>
+        <span class="bonus-badge badge-penalty" id="penalty-chip" style="display:none">-0점</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="bonus-body open">
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tname">AI·첨단·디지털 관련 분야 훈련과정</div>
+          <div class="tdesc">해당 자격(또는 직종)으로 신청 시 — 기업정보 탭 체크박스와 연동됨</div>
+        </div>
+        <div class="toggle-switch">
+          <span class="toggle-pts bonus" id="ai-pts">+0점</span>
+          <label class="switch">
+            <input type="checkbox" id="sw-ai" onchange="syncCheckboxFromSwitch('chk-ai','sw-ai')">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tname">정부부처 인증 등 해당 기업</div>
+          <div class="tdesc">사회적경제기업 / 지역혁신선도기업 / 외투기업 포상 / 농공단지 / 산학협력 우수기업</div>
+        </div>
+        <div class="toggle-switch">
+          <span class="toggle-pts bonus" id="gov-pts">+0점</span>
+          <label class="switch">
+            <input type="checkbox" id="sw-gov" onchange="syncCheckboxFromSwitch('chk-gov','sw-gov')">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tname">최근 1년 이내 지정취소 처분 기업</div>
+          <div class="tdesc">HRD-Net 처분 이력 확인</div>
+        </div>
+        <div class="toggle-switch">
+          <span class="toggle-pts penalty" id="revoked-pts">-0점</span>
+          <label class="switch">
+            <input type="checkbox" id="sw-revoked" onchange="syncCheckboxFromSwitch('chk-revoked','sw-revoked')">
+            <span class="slider penalty-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tname">최근 1년 이내 학습기업 지위 자진반납 기업</div>
+          <div class="tdesc">HRD-Net 자진반납 이력 확인</div>
+        </div>
+        <div class="toggle-switch">
+          <span class="toggle-pts penalty" id="returned-pts">-0점</span>
+          <label class="switch">
+            <input type="checkbox" id="sw-returned" onchange="syncCheckboxFromSwitch('chk-returned','sw-returned')">
+            <span class="slider penalty-slider"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 버튼 -->
+  <div class="print-area">
+    <button class="btn btn-secondary btn-lg" onclick="resetAll()">초기화</button>
+    <button class="btn btn-primary btn-lg" onclick="printPage()">🖨️ 인쇄 / PDF 저장</button>
+  </div>
+
+</div>
+
+<script>
+const scores = {};
+let excludedFields = new Set();
+// 우량기업 체크 전 원래 점수/버튼 상태를 저장
+const excellentBackup = {};
+
+function setScore(key, val, btn) {
+  excludedFields.delete(key);
+  scores[key] = val;
+  const group = btn.closest('.btn-group');
+  group.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active', 'excluded'));
+  btn.classList.add('active');
+  document.getElementById(key + '_score').textContent = val;
+  updateAll();
+}
+
+function setExcluded(key, btn) {
+  excludedFields.add(key);
+  scores[key] = 0;
+  const group = btn.closest('.btn-group');
+  group.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active', 'excluded'));
+  btn.classList.add('excluded');
+  document.getElementById(key + '_score').textContent = '지정제외';
+  updateAll();
+}
+
+// 특정 key의 현재 버튼 활성 상태를 저장
+function backupBtnState(key) {
+  const scoreElem = document.getElementById(key + '_score');
+  if (!scoreElem) return;
+  const group = scoreElem.closest('.eval-item').querySelector('.btn-group');
+  if (!group) return;
+  const activeBtn = group.querySelector('.btn-score.active');
+  excellentBackup[key] = {
+    score: scores[key],
+    activeBtnIndex: activeBtn ? [...group.querySelectorAll('.btn-score')].indexOf(activeBtn) : -1
+  };
+}
+
+// 저장된 상태로 복원
+function restoreBtnState(key) {
+  const backup = excellentBackup[key];
+  const scoreElem = document.getElementById(key + '_score');
+  if (!scoreElem) return;
+  const group = scoreElem.closest('.eval-item').querySelector('.btn-group');
+  if (!group) return;
+  const btns = group.querySelectorAll('.btn-score');
+  btns.forEach(b => b.classList.remove('active'));
+
+  if (backup && backup.activeBtnIndex >= 0) {
+    scores[key] = backup.score;
+    btns[backup.activeBtnIndex].classList.add('active');
+    scoreElem.textContent = backup.score;
+  } else {
+    delete scores[key];
+    scoreElem.textContent = '0';
+  }
+  delete excellentBackup[key];
+}
+
+function updateAll() {
+  // 체크박스 → 스위치 동기화
+  syncSwitchFromCheckbox('chk-ai', 'sw-ai');
+  syncSwitchFromCheckbox('chk-gov', 'sw-gov');
+  syncSwitchFromCheckbox('chk-revoked', 'sw-revoked');
+  syncSwitchFromCheckbox('chk-returned', 'sw-returned');
+
+  const excellent = document.getElementById('chk-excellent').checked;
+  const excellentKeys = ['s1_3', 's1_5', 's2_3', 's3_1'];
+  const excellentMaxMap = { s1_3: 5, s1_5: 5, s2_3: 10, s3_1: 10 };
+
+  if (excellent) {
+    // 처음 체크할 때만 백업 (이미 백업된 키는 건너뜀)
+    excellentKeys.forEach(key => {
+      if (!(key in excellentBackup)) backupBtnState(key);
+      const maxScore = excellentMaxMap[key];
+      scores[key] = maxScore;
+      const scoreElem = document.getElementById(key + '_score');
+      if (scoreElem) scoreElem.textContent = maxScore;
+      const group = scoreElem.closest('.eval-item').querySelector('.btn-group');
+      if (group) {
+        group.querySelectorAll('.btn-score').forEach(b => {
+          b.classList.remove('active');
+          const lbl = b.querySelector('.label');
+          if (lbl && parseInt(lbl.textContent) === maxScore) b.classList.add('active');
+        });
+      }
+    });
+  } else {
+    // 해제 시 백업이 있는 키만 복원
+    excellentKeys.forEach(key => {
+      if (key in excellentBackup) restoreBtnState(key);
+    });
+  }
+
+  const s1 = (scores['s1_1'] || 0) + (scores['s1_2'] || 0) + (scores['s1_3'] || 0) +
+             (scores['s1_4'] || 0) + (scores['s1_5'] || 0);
+  const s2 = (scores['s2_1'] || 0) + (scores['s2_2'] || 0) + (scores['s2_3'] || 0);
+  const s3 = (scores['s3_1'] || 0) + (scores['s3_2'] || 0) + (scores['s3_3'] || 0);
+
+  const aiOn = document.getElementById('chk-ai').checked;
+  const govOn = document.getElementById('chk-gov').checked;
+  const revokedOn = document.getElementById('chk-revoked').checked;
+  const returnedOn = document.getElementById('chk-returned').checked;
+
+  const bonus = (aiOn ? 3 : 0) + (govOn ? 4 : 0);
+  const penalty = (revokedOn ? 30 : 0) + (returnedOn ? 15 : 0);
+
+  // 가점 표시
+  document.getElementById('ai-pts').textContent = aiOn ? '+3점' : '+0점';
+  document.getElementById('gov-pts').textContent = govOn ? '+4점' : '+0점';
+  document.getElementById('revoked-pts').textContent = revokedOn ? '-30점' : '-0점';
+  document.getElementById('returned-pts').textContent = returnedOn ? '-15점' : '-0점';
+
+  const bonusChip = document.getElementById('bonus-chip');
+  const penaltyChip = document.getElementById('penalty-chip');
+  bonusChip.textContent = '+' + bonus + '점';
+  if (penalty > 0) {
+    penaltyChip.style.display = 'inline';
+    penaltyChip.textContent = '-' + penalty + '점';
+  } else {
+    penaltyChip.style.display = 'none';
+  }
+
+  const total = Math.max(0, s1 + s2 + s3 + bonus - penalty);
+
+  document.getElementById('sec1-score').textContent = s1;
+  document.getElementById('sec2-score').textContent = s2;
+  document.getElementById('sec3-score').textContent = s3;
+  document.getElementById('sec1-chip').textContent = s1 + '점';
+  document.getElementById('sec2-chip').textContent = s2 + '점';
+  document.getElementById('sec3-chip').textContent = s3 + '점';
+  document.getElementById('bonus-display').textContent = (bonus - penalty >= 0 ? '+' : '') + (bonus - penalty);
+  document.getElementById('total-score').textContent = total;
+
+  // 판정
+  const badge = document.getElementById('result-badge');
+  const note = document.getElementById('result-note');
+
+  if (excludedFields.size > 0) {
+    badge.className = 'result-badge result-excluded';
+    badge.textContent = '지정 제외';
+    note.textContent = '지정 제외 항목 해당';
+  } else if (Object.keys(scores).length < 8) {
+    badge.className = 'result-badge';
+    badge.style.background = '#666';
+    badge.textContent = '입력 중';
+    note.textContent = '모든 항목 입력 후 판정';
+  } else if (total >= 70) {
+    badge.className = 'result-badge result-pass';
+    badge.textContent = '적합 ✓';
+    note.textContent = '70점 이상 — 지정 적합';
+  } else {
+    badge.className = 'result-badge result-fail';
+    badge.textContent = '부적합';
+    note.textContent = '70점 미만 — 지정 부적합';
+  }
+}
+
+function applyExcellent() {
+  updateAll();
+}
+
+function syncSwitchFromCheckbox(chkId, swId) {
+  const chk = document.getElementById(chkId);
+  const sw = document.getElementById(swId);
+  if (chk && sw) sw.checked = chk.checked;
+}
+
+function syncCheckboxFromSwitch(chkId, swId) {
+  const chk = document.getElementById(chkId);
+  const sw = document.getElementById(swId);
+  if (chk && sw) chk.checked = sw.checked;
+  updateAll();
+}
+
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleBonus(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function resetAll() {
+  document.getElementById('reset-modal').classList.add('open');
+}
+function closeResetModal() {
+  document.getElementById('reset-modal').classList.remove('open');
+}
+function doReset() {
+  closeResetModal();
+
+  // 데이터 초기화
+  Object.keys(scores).forEach(k => delete scores[k]);
+  Object.keys(excellentBackup).forEach(k => delete excellentBackup[k]);
+  excludedFields.clear();
+
+  // 버튼 UI 초기화
+  document.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active', 'excluded'));
+
+  // 점수 표시 초기화 (지정제외 포함)
+  ['s1_1','s1_2','s1_3','s1_4','s1_5','s2_1','s2_2','s2_3','s3_1','s3_2','s3_3'].forEach(key => {
+    const el = document.getElementById(key + '_score');
+    if (el) el.textContent = '0';
+  });
+
+  // 체크박스/스위치 초기화
+  ['chk-excellent','chk-ai','chk-gov','chk-revoked','chk-returned'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  ['sw-ai','sw-gov','sw-revoked','sw-returned'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+
+  // 기업정보 입력란 초기화
+  document.getElementById('company-name').value = '';
+  document.getElementById('eval-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('train-field').value = '';
+  document.getElementById('apply-type').value = '';
+  document.getElementById('center-name').value = '';
+  document.getElementById('branch-name').value = '';
+
+  // updateAll을 직접 호출하지 않고 수동으로 요약 UI만 리셋
+  // (updateAll 내 우량기업 로직이 다시 실행되는 것을 방지)
+  document.getElementById('sec1-score').textContent = '0';
+  document.getElementById('sec2-score').textContent = '0';
+  document.getElementById('sec3-score').textContent = '0';
+  document.getElementById('sec1-chip').textContent = '0점';
+  document.getElementById('sec2-chip').textContent = '0점';
+  document.getElementById('sec3-chip').textContent = '0점';
+  document.getElementById('bonus-display').textContent = '+0';
+  document.getElementById('total-score').textContent = '0';
+  document.getElementById('ai-pts').textContent = '+0점';
+  document.getElementById('gov-pts').textContent = '+0점';
+  document.getElementById('revoked-pts').textContent = '-0점';
+  document.getElementById('returned-pts').textContent = '-0점';
+  document.getElementById('bonus-chip').textContent = '+0점';
+  document.getElementById('penalty-chip').style.display = 'none';
+
+  const badge = document.getElementById('result-badge');
+  badge.className = 'result-badge';
+  badge.style.background = '#666';
+  badge.textContent = '미입력';
+  document.getElementById('result-note').textContent = '항목을 입력해주세요';
+} // doReset 끝
+
+// 오늘 날짜 기본값
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('eval-date').value = today;
+
+function printPage() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (win) {
+    win.onload = () => {
+      // 모든 섹션 펼치기
+      win.document.querySelectorAll('.section-body, .bonus-body').forEach(el => el.classList.add('open'));
+      setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 400);
+    };
+  } else {
+    // 팝업 차단된 경우 그냥 다운로드
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '일학습병행_현장심사표.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+</script>
+</body>
+</html>
